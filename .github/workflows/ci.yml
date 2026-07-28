@@ -1,0 +1,27 @@
+name: lightweight-ci
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      DOC_REDACT_OCR_BACKEND: fake
+      DOC_REDACT_VERIFY_WITH_OCR: "false"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: python -m pip install --upgrade "pip==25.1.1"
+      - run: python -m pip install -e '.[test]'
+      - run: pytest --cov=doc_redact --cov-report=term-missing
+

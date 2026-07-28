@@ -1,0 +1,57 @@
+[build-system]
+requires = ["hatchling>=1.26,<2"]
+build-backend = "hatchling.build"
+
+[project]
+name = "doc-redact"
+version = "0.1.0"
+description = "Local-first irreversible document redaction for format-valid Australian Centrelink CRN candidates"
+readme = "README.md"
+requires-python = ">=3.11,<3.14"
+license = { text = "Proprietary" }
+dependencies = [
+  "fastapi==0.116.1",
+  "uvicorn[standard]==0.35.0",
+  "python-multipart==0.0.20",
+  "pydantic==2.11.7",
+  "Pillow==11.3.0",
+  "PyMuPDF==1.26.3",
+  "pypdf==5.8.0",
+  "regex==2025.7.34",
+  "presidio-analyzer==2.2.359",
+]
+
+[project.optional-dependencies]
+ocr = [
+  "paddleocr==3.1.0",
+  "paddlepaddle==3.1.0",
+]
+gliner = [
+  "gliner==0.2.21",
+  "presidio-analyzer[transformers]==2.2.359",
+]
+test = [
+  "httpx==0.28.1",
+  "pytest==8.4.1",
+  "pytest-asyncio==1.1.0",
+  "pytest-cov==6.2.1",
+]
+
+[project.scripts]
+doc-redact = "doc_redact.web:run"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/doc_redact"]
+
+[tool.pytest.ini_options]
+addopts = "-q --strict-markers"
+testpaths = ["tests"]
+markers = [
+  "requires_libreoffice: requires the LibreOffice executable",
+  "requires_ocr: requires heavyweight PP-OCRv5 models",
+]
+
+[tool.coverage.run]
+source = ["doc_redact"]
+branch = true
+

@@ -1,0 +1,350 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <meta name="theme-color" content="#123c44">
+  <title>Doc Redact — local document redaction</title>
+  <link rel="stylesheet" href="/assets/app.css">
+  <script src="/assets/app.js" defer></script>
+</head>
+<body
+  data-max-upload-bytes="{{MAX_UPLOAD_BYTES}}"
+  data-max-pattern-length="{{MAX_PATTERN_LENGTH}}"
+  data-max-patterns="{{MAX_PATTERNS}}"
+>
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+
+  <header class="site-header">
+    <a class="brand" href="/" aria-label="Doc Redact home">
+      <span class="brand-mark" aria-hidden="true">
+        <span></span><span></span><span></span>
+      </span>
+      <span>Doc Redact</span>
+    </a>
+    <span class="local-badge">
+      <span class="status-dot" aria-hidden="true"></span>
+      Local processing
+    </span>
+  </header>
+
+  <main id="main-content">
+    <section class="hero" aria-labelledby="page-title">
+      <div>
+        <p class="eyebrow">Privacy-first document tool</p>
+        <h1 id="page-title">Cover sensitive reference numbers before you share.</h1>
+        <p class="hero-copy">
+          Find and irreversibly cover <strong>format-valid Centrelink CRN candidates</strong>
+          in common document formats. Your files are processed by this local service and
+          are not sent to an external AI service.
+        </p>
+      </div>
+      <aside class="scope-note" aria-label="Important detection scope">
+        <svg aria-hidden="true" viewBox="0 0 24 24" width="24" height="24">
+          <path d="M12 3 2.8 20h18.4L12 3Zm0 5.2v6.1m0 2.9v.1"/>
+        </svg>
+        <div>
+          <strong>Format match, not identity validation</strong>
+          <p>
+            A match does not confirm that a CRN was issued by Services Australia or
+            belongs to any person.
+          </p>
+        </div>
+      </aside>
+    </section>
+
+    <div class="workspace">
+      <section class="panel upload-panel" aria-labelledby="upload-title">
+        <div class="panel-heading">
+          <span class="step-number" aria-hidden="true">1</span>
+          <div>
+            <p class="overline">Select a document</p>
+            <h2 id="upload-title">Create a verified redacted copy</h2>
+          </div>
+        </div>
+
+        <noscript>
+          <p class="notice notice-warning">
+            JavaScript is off. You can still submit a document, but the progress,
+            result summary, and in-browser preview will not be available.
+          </p>
+        </noscript>
+
+        <form id="redaction-form" action="/redact" method="post" enctype="multipart/form-data">
+          <div id="drop-zone" class="drop-zone">
+            <label class="visually-hidden" for="document">Document to redact</label>
+            <input
+              id="document"
+              class="file-input"
+              name="document"
+              type="file"
+              accept=".pdf,.docx,.jpg,.jpeg,.png,.tif,.tiff"
+              aria-describedby="file-guidance file-selection"
+              required
+            >
+            <div class="upload-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="30" height="30">
+                <path d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5M5 14.5V19h14v-4.5"/>
+              </svg>
+            </div>
+            <p><strong>Drop a document here</strong></p>
+            <p class="muted">or choose a file</p>
+          </div>
+
+          <div id="file-selection" class="file-selection" aria-live="polite">
+            No document selected
+          </div>
+          <p id="file-guidance" class="guidance">
+            PDF, DOCX, JPEG/JPG, PNG or TIFF · up to {{MAX_UPLOAD_LABEL}} ·
+            up to {{MAX_PAGES}} pages
+          </p>
+
+          <div id="upload-error" class="notice notice-error" role="alert" tabindex="-1" hidden>
+            <strong>We couldn’t process that document.</strong>
+            <span id="upload-error-message"></span>
+          </div>
+
+          <button id="submit-button" class="button button-primary button-full" type="submit">
+            <svg aria-hidden="true" viewBox="0 0 24 24" width="20" height="20">
+              <path d="M12 3 5 6v5c0 4.8 2.9 8.3 7 10 4.1-1.7 7-5.2 7-10V6l-7-3Zm-3 9 2 2 4-4"/>
+            </svg>
+            Scan and redact
+          </button>
+        </form>
+
+        <section id="progress-panel" class="progress-panel" aria-labelledby="progress-title" hidden>
+          <div class="progress-heading">
+            <div>
+              <p class="overline">Local processing</p>
+              <h3 id="progress-title">Preparing your verified copy</h3>
+            </div>
+            <span id="progress-value">0%</span>
+          </div>
+          <progress id="upload-progress" max="100" value="0">0%</progress>
+          <p id="progress-status" class="muted" role="status" aria-live="polite">
+            Uploading to the local processor…
+          </p>
+          <ol class="process-steps" aria-label="Processing stages">
+            <li id="stage-upload" class="active">Receive securely</li>
+            <li id="stage-process">Detect and cover pixels</li>
+            <li id="stage-verify">Verify safe output</li>
+          </ol>
+        </section>
+
+        <section id="result-panel" class="result-panel" aria-labelledby="result-title" tabindex="-1" hidden>
+          <div class="result-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="28" height="28">
+              <path d="m5 12.5 4 4L19 7"/>
+            </svg>
+          </div>
+          <div class="result-content">
+            <p class="verified-label">Verification passed</p>
+            <h3 id="result-title">Your redacted PDF is ready</h3>
+            <p id="result-summary"></p>
+            <p class="muted">
+              Only a count is shown here. Detected values and document text are never
+              added to this page.
+            </p>
+            <div class="result-actions">
+              <a id="download-link" class="button button-primary" download="redacted-document.pdf">
+                Download verified PDF
+              </a>
+              <button id="start-over" class="button button-secondary" type="button">
+                Redact another
+              </button>
+            </div>
+            <p class="review-reminder">
+              <strong>Review before sharing.</strong> Automated detection can miss sensitive
+              information or cover text that only resembles a reference number.
+            </p>
+            <details class="preview-details">
+              <summary>Preview verified redacted output</summary>
+              <p class="muted">
+                For privacy, the original document is never previewed. This view contains
+                only the verified, image-only PDF.
+              </p>
+              <iframe id="output-preview" title="Verified redacted PDF preview"></iframe>
+            </details>
+          </div>
+        </section>
+      </section>
+
+      <aside class="panel assurance-panel" aria-labelledby="assurance-title">
+        <p class="overline">What happens to your file</p>
+        <h2 id="assurance-title">A safer output by design</h2>
+        <ol class="assurance-list">
+          <li>
+            <span aria-hidden="true">01</span>
+            <div>
+              <strong>Rasterized page by page</strong>
+              <p>Source text layers, annotations, forms and attachments are not copied.</p>
+            </div>
+          </li>
+          <li>
+            <span aria-hidden="true">02</span>
+            <div>
+              <strong>Covered with solid pixels</strong>
+              <p>Detected areas are painted black, not hidden behind removable markup.</p>
+            </div>
+          </li>
+          <li>
+            <span aria-hidden="true">03</span>
+            <div>
+              <strong>Checked before download</strong>
+              <p>No download is offered unless the newly built PDF passes verification.</p>
+            </div>
+          </li>
+        </ol>
+        <div class="privacy-card">
+          <svg aria-hidden="true" viewBox="0 0 24 24" width="22" height="22">
+            <path d="M7 10V8a5 5 0 0 1 10 0v2m-11 0h12v10H6V10Zm6 4v2"/>
+          </svg>
+          <div>
+            <strong>Private by default</strong>
+            <p>Temporary working files are cleaned up after each request.</p>
+          </div>
+        </div>
+      </aside>
+    </div>
+
+    <section class="patterns-section" aria-labelledby="patterns-title">
+      <div class="section-intro">
+        <p class="eyebrow">Optional controls</p>
+        <h2 id="patterns-title">Custom redaction patterns</h2>
+        <p>
+          Add tightly scoped patterns for synthetic case IDs or organisation-specific
+          references. Changes apply only to this running local service.
+        </p>
+      </div>
+
+      <div class="patterns-grid">
+        <div class="panel">
+          <div class="pattern-list-heading">
+            <div>
+              <h3>Active recognizers</h3>
+              <p id="pattern-count" class="muted">Loading patterns…</p>
+            </div>
+            <button id="show-pattern-form" class="button button-secondary button-small" type="button">
+              Add pattern
+            </button>
+          </div>
+          <div id="pattern-status" class="notice notice-error" role="alert" tabindex="-1" hidden></div>
+          <ul id="pattern-list" class="pattern-list" aria-live="polite">
+            <li>
+              Centrelink CRN
+              <span class="visually-hidden">Protected recognizer AU_CENTRELINK_CRN</span>
+            </li>
+          </ul>
+        </div>
+
+        <div id="pattern-form-panel" class="panel pattern-form-panel" hidden>
+          <div class="pattern-form-heading">
+            <div>
+              <p class="overline">Pattern settings</p>
+              <h3 id="pattern-form-title">Add a custom pattern</h3>
+            </div>
+            <button id="cancel-pattern" class="icon-button" type="button" aria-label="Close pattern form">
+              <svg aria-hidden="true" viewBox="0 0 24 24" width="20" height="20">
+                <path d="m6 6 12 12M18 6 6 18"/>
+              </svg>
+            </button>
+          </div>
+
+          <form id="pattern-form">
+            <label for="pattern-identifier">Pattern identifier</label>
+            <input
+              id="pattern-identifier"
+              name="identifier"
+              type="text"
+              maxlength="64"
+              pattern="[A-Za-z][A-Za-z0-9_-]{0,63}"
+              aria-describedby="pattern-identifier-help"
+              required
+            >
+            <p id="pattern-identifier-help" class="field-help">
+              Stable machine name. Start with a letter; use letters, numbers, underscores or hyphens.
+            </p>
+
+            <label for="pattern-name">Display name</label>
+            <input id="pattern-name" name="name" type="text" maxlength="64" required>
+
+            <label for="pattern-label">Result label</label>
+            <input id="pattern-label" name="output_label" type="text" maxlength="64" required>
+
+            <label for="pattern-regex">Regular expression</label>
+            <textarea
+              id="pattern-regex"
+              name="regex"
+              rows="3"
+              maxlength="{{MAX_PATTERN_LENGTH}}"
+              spellcheck="false"
+              aria-describedby="pattern-regex-help"
+              required
+            ></textarea>
+            <p id="pattern-regex-help" class="field-help">
+              Maximum {{MAX_PATTERN_LENGTH}} characters. Unsafe constructs and slow patterns
+              are rejected by the server.
+            </p>
+
+            <label for="pattern-context">Context terms <span class="optional">(optional)</span></label>
+            <input
+              id="pattern-context"
+              name="context_terms"
+              type="text"
+              aria-describedby="pattern-context-help"
+            >
+            <p id="pattern-context-help" class="field-help">
+              Comma-separated words near a match, up to 20 terms. Context reduces false positives.
+            </p>
+
+            <label for="pattern-confidence">Confidence threshold</label>
+            <div class="confidence-control">
+              <input
+                id="pattern-confidence"
+                name="confidence"
+                type="range"
+                min="0.1"
+                max="1"
+                step="0.05"
+                value="0.6"
+              >
+              <output id="confidence-output" for="pattern-confidence">0.60</output>
+            </div>
+
+            <label class="checkbox-row" for="pattern-enabled">
+              <input id="pattern-enabled" name="enabled" type="checkbox" checked>
+              <span>
+                <strong>Enable this pattern</strong>
+                <small>Disabled patterns are saved but not used during scanning.</small>
+              </span>
+            </label>
+
+            <div id="pattern-form-error" class="notice notice-error" role="alert" tabindex="-1" hidden></div>
+            <div class="form-actions">
+              <button class="button button-primary" type="submit">Save pattern</button>
+              <button id="reset-pattern" class="button button-secondary" type="button">Cancel</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <section class="limitations" aria-labelledby="limitations-title">
+      <div>
+        <p class="overline">Know the limits</p>
+        <h2 id="limitations-title">Automated detection is not guaranteed</h2>
+      </div>
+      <p>
+        OCR quality, rotation, damage, handwriting and unusual formatting can affect results.
+        Always inspect the verified redacted copy before sharing it. The output is image-only,
+        so searchable text and document accessibility structure are removed.
+      </p>
+    </section>
+  </main>
+
+  <footer>
+    <p>Doc Redact · Runs on your local service · No external analytics</p>
+  </footer>
+</body>
+</html>

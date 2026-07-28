@@ -1,0 +1,11 @@
+{
+  "identifier": "SYNTHETIC_CASE_ID",
+  "name": "Synthetic case ID",
+  "regex": "\\bCASE-[0-9]{4}-[A-Z]{2}\\b",
+  "context_terms": [
+    "synthetic test case"
+  ],
+  "confidence": 0.7,
+  "enabled": true,
+  "output_label": "Synthetic case identifier"
+}

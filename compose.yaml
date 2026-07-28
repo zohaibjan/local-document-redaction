@@ -1,0 +1,29 @@
+services:
+  app:
+    build: .
+    ports:
+      - "127.0.0.1:8000:8000"
+    environment:
+      DOC_REDACT_OCR_BACKEND: paddle
+      DOC_REDACT_VERIFY_WITH_OCR: "true"
+      PADDLE_PDX_CACHE_HOME: /models
+    volumes:
+      - ocr-models:/models
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=1g,mode=1777
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    networks:
+      - processing
+    restart: unless-stopped
+
+volumes:
+  ocr-models:
+
+networks:
+  processing:
+    internal: true
+
